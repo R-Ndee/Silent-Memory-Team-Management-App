@@ -1,0 +1,28 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "silent-memory",
+          "appId": "1:401188926833:android:03e6fe6f16f0775a24b2d0",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "silent-memory",
+          "configurations": {
+            "android": "1:401188926833:android:03e6fe6f16f0775a24b2d0",
+            "ios": "1:401188926833:ios:5642aa3078e2513824b2d0",
+            "macos": "1:401188926833:ios:5642aa3078e2513824b2d0",
+            "web": "1:401188926833:web:d92ff4b0ea4eceed24b2d0",
+            "windows": "1:401188926833:web:f0670f7d990d818e24b2d0"
+          }
+        }
+      }
+    }
+  }
+}
