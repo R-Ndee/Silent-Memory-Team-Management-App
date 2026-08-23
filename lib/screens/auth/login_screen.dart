@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/theme/app_colors.dart';
-import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 
@@ -39,10 +38,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       final authService = ref.read(authServiceProvider);
-      await authService.signInWithEmailAndPassword(
+      final userCredential = await authService.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
+
+      final uid = userCredential.user?.uid;
+      if (uid != null) {
+        final profile = await authService.getUserProfile(uid);
+        if (profile != null && profile.status == AppConstants.userStatusInactive) {
+          if (mounted) {
+            setState(() {
+              _errorMessage = 'Akun Anda tidak aktif. Hubungi Super Admin.';
+              _isLoading = false;
+            });
+          }
+          await authService.signOut();
+          return;
+        }
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -55,19 +69,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<UserModel?>>(currentUserProfileProvider, (previous, next) {
-      next.whenData((userProfile) {
-        if (userProfile != null && userProfile.status == AppConstants.userStatusInactive) {
-          if (mounted) {
-            setState(() {
-              _errorMessage = 'Akun Anda tidak aktif. Hubungi Super Admin.';
-              _isLoading = false;
-            });
-          }
-        }
-      });
-    });
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(

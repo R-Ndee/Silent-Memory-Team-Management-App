@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,15 +10,28 @@ import '../../screens/error/not_found_screen.dart';
 import '../../screens/member/member_dashboard_screen.dart';
 import '../../screens/super_admin/super_admin_dashboard_screen.dart';
 
+/// Helper Listenable that triggers GoRouter redirect re-evaluation
+/// whenever authStateProvider or currentUserProfileProvider updates.
+class AppRouterNotifier extends ChangeNotifier {
+  AppRouterNotifier(Ref ref) {
+    ref.listen(authStateProvider, (_, __) => notifyListeners());
+    ref.listen(currentUserProfileProvider, (_, __) => notifyListeners());
+  }
+}
+
 /// Provider for GoRouter instance with role-based navigation and authentication redirects.
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final profileState = ref.watch(currentUserProfileProvider);
+  final notifier = AppRouterNotifier(ref);
+  ref.onDispose(notifier.dispose);
 
   return GoRouter(
     initialLocation: '/login',
+    refreshListenable: notifier,
     errorBuilder: (context, state) => const NotFoundScreen(),
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
+      final profileState = ref.read(currentUserProfileProvider);
+
       final isAuthLoading = authState.isLoading;
       final isAuthenticated = authState.asData?.value != null;
       final isProfileLoading = isAuthenticated && profileState.isLoading;
@@ -67,10 +81,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return defaultRoleLocation ?? '/login';
       }
 
-      if (location.startsWith('/member') &&
-          role != AppConstants.roleMember &&
-          role != AppConstants.roleAdmin &&
-          role != AppConstants.roleSuperAdmin) {
+      if (location.startsWith('/member') && role != AppConstants.roleMember) {
         return defaultRoleLocation ?? '/login';
       }
 
